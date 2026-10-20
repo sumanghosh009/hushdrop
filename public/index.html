@@ -70,13 +70,29 @@
     </div>
 
     <div id="games" class="pane" hidden>
-      <h2>Tic-Tac-Toe</h2>
-      <p id="gstat" class="gstat"></p>
-      <div id="board" class="board"></div>
-      <button class="btn alt" id="again">New game</button>
+      <div class="chips" role="group" aria-label="Choose a game">
+        <button class="gchip on" data-game="ttt">Tic-Tac-Toe</button>
+        <button class="gchip" data-game="rps">Rock Paper Scissors</button>
+      </div>
+      <div id="ttt">
+        <p id="gstat" class="gstat"></p>
+        <div id="board" class="board"></div>
+        <button class="btn alt" id="again">New game</button>
+      </div>
+      <div id="rps" hidden>
+        <p id="rstat" class="gstat"></p>
+        <div class="picks">
+          <button class="btn alt" data-pick="rock">Rock</button>
+          <button class="btn alt" data-pick="paper">Paper</button>
+          <button class="btn alt" data-pick="scissors">Scissors</button>
+        </div>
+        <p id="rscore" class="gstat"></p>
+      </div>
     </div>
   </section>
 </main>
+
+<div id="drop" hidden>Drop a file to send it</div>
 
 <footer>© 2026 Suman Ghosh. All rights reserved.</footer>
 <div id="toast" role="status"></div>

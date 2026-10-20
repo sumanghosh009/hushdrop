@@ -29,9 +29,9 @@ h2{font:700 1.2rem Sora,sans-serif;letter-spacing:-.01em}
 .card{background:var(--glass);border:1px solid var(--line);border-radius:var(--r);padding:28px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .card>p{color:var(--mute);margin-top:4px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}
-.chip{padding:10px 16px;border-radius:99px;border:1px solid var(--line);background:transparent;cursor:pointer;transition:background .2s,color .2s}
-.chip:hover{border-color:var(--acc)}
-.chip.on{background:var(--acc);color:#17113f;border-color:var(--acc);font-weight:700}
+.chip,.gchip{padding:10px 16px;border-radius:99px;border:1px solid var(--line);background:transparent;cursor:pointer;transition:background .2s,color .2s}
+.chip:hover,.gchip:hover{border-color:var(--acc)}
+.chip.on,.gchip.on{background:var(--acc);color:#17113f;border-color:var(--acc);font-weight:700}
 
 .btn{display:block;width:100%;padding:14px 20px;border:1px solid var(--acc);border-radius:14px;background:var(--acc);color:#17113f;font:700 .95rem Sora,sans-serif;text-align:center;cursor:pointer;transition:transform .2s,box-shadow .2s}
 .btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px -10px var(--acc)}
@@ -92,3 +92,11 @@ footer{padding:28px 16px;text-align:center;color:var(--mute);font-size:.85rem}
 
 @media (max-width:720px){.cards,.row{grid-template-columns:1fr}.card{padding:22px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Version 2 */
+#games .chips{justify-content:center;margin:0 0 18px}
+.picks{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:min(440px,100%);margin:18px auto}
+.picks .btn:disabled{opacity:.45;cursor:default;transform:none;box-shadow:none}
+.item .meta{flex:1;min-width:0;display:flex;align-items:center;gap:12px}
+.thumb{width:56px;height:56px;flex:none;border-radius:10px;object-fit:cover;border:1px solid var(--line);cursor:zoom-in}
+#drop{position:fixed;inset:14px;z-index:8;display:grid;place-items:center;border:2px dashed var(--mint);border-radius:24px;background:rgba(18,17,43,.85);font:700 1.4rem Sora,sans-serif;pointer-events:none}

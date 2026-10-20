@@ -16,6 +16,10 @@ const fails = new Map(); // ip -> wrong-PIN counter
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
 const newGame = () => ({ board: Array(9).fill(null), turn: 'X', winner: null, line: null });
+const newRps = () => ({ picks: { X: null, O: null }, score: { X: 0, O: 0 }, last: null });
+const rpsView = r => ({ picked: { X: !!r.picks.X, O: !!r.picks.O }, score: r.score, last: r.last }); // hides picks until both chose
+const BEATS = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
+const IMG = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp' };
 const live = pin => { const s = sessions.get(pin); return s && s.expiresAt > Date.now() ? s : null; };
 const send = (ws, msg) => ws.readyState === 1 && ws.send(JSON.stringify(msg));
 const broadcast = (s, msg) => s.sockets.forEach(ws => send(ws, msg));
@@ -38,7 +42,7 @@ app.post('/api/create', express.json(), (req, res) => {
   sessions.set(pin, {
     createdAt: now, expiresAt: now + minutes * 60000,
     items: [], files: new Map(), sockets: new Set(),
-    game: newGame(), players: { X: null, O: null }
+    game: newGame(), rps: newRps(), players: { X: null, O: null }
   });
   res.json({ pin });
 });
@@ -71,9 +75,10 @@ app.get('/api/file/:pin/:id', (req, res) => {
   const s = live(req.params.pin);
   const f = s && s.files.get(req.params.id);
   if (!f) return res.status(404).send('This file is gone.');
+  const img = req.query.inline && IMG[f.name.split('.').pop().toLowerCase()]; // only safe image types show inline
   res.set({
-    'Content-Type': 'application/octet-stream',
-    'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(f.name)}`,
+    'Content-Type': img || 'application/octet-stream',
+    'Content-Disposition': (img ? 'inline' : 'attachment') + `; filename*=UTF-8''${encodeURIComponent(f.name)}`,
     'X-Content-Type-Options': 'nosniff'
   });
   res.send(f.buf);
@@ -92,7 +97,7 @@ wss.on('connection', (ws, req) => {
   s.sockets.add(ws);
   ws.role = ['X', 'O'].find(r => !s.players[r]) || null;
   if (ws.role) s.players[ws.role] = ws;
-  send(ws, { type: 'init', createdAt: s.createdAt, expiresAt: s.expiresAt, items: s.items, game: s.game, role: ws.role });
+  send(ws, { type: 'init', createdAt: s.createdAt, expiresAt: s.expiresAt, items: s.items, game: s.game, rps: rpsView(s.rps), role: ws.role });
 
   ws.on('message', raw => {
     let m;
@@ -113,6 +118,18 @@ wss.on('connection', (ws, req) => {
       else if (g.board.every(Boolean)) g.winner = 'draw';
       else g.turn = g.turn === 'X' ? 'O' : 'X';
       broadcast(s, { type: 'game', game: g });
+    } else if (m.type === 'rps') {
+      const r = s.rps;
+      if (!ws.role || !BEATS[m.pick] || r.picks[ws.role]) return;
+      r.picks[ws.role] = m.pick;
+      if (r.picks.X && r.picks.O) {
+        const { X, O } = r.picks;
+        const winner = X === O ? 'draw' : BEATS[X] === O ? 'X' : 'O';
+        if (winner !== 'draw') r.score[winner]++;
+        r.last = { X, O, winner };
+        r.picks = { X: null, O: null };
+      }
+      broadcast(s, { type: 'rps', rps: rpsView(r) });
     } else if (m.type === 'reset') {
       s.game = newGame();
       broadcast(s, { type: 'game', game: s.game });

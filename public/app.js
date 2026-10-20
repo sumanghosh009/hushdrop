@@ -58,9 +58,10 @@ function connect() {
     if (m.type === 'init') {
       created = m.createdAt; expires = m.expiresAt; role = m.role;
       $('#feed').innerHTML = ''; m.items.forEach(addItem); showEmpty();
-      drawGame(m.game); run();
+      drawGame(m.game); drawRps(m.rps); run();
     } else if (m.type === 'item') addItem(m.item);
     else if (m.type === 'game') drawGame(m.game);
+    else if (m.type === 'rps') drawRps(m.rps);
     else if (m.type === 'expired') end();
   };
   sock.onclose = ev => {
@@ -114,7 +115,14 @@ function addItem(it) {
     const d = document.createElement('div'), n = document.createElement('b'), s = document.createElement('small'), a = document.createElement('a');
     n.textContent = it.name; s.textContent = size(it.size);
     a.className = 'mini'; a.textContent = 'Download'; a.href = `/api/file/${pin}/${it.id}`; a.download = it.name;
-    d.append(n, s); li.append(d, a);
+    d.append(n, s);
+    const w = document.createElement('div'); w.className = 'meta';
+    if (/\.(png|jpe?g|gif|webp)$/i.test(it.name)) { // image preview
+      const im = document.createElement('img'), u = `/api/file/${pin}/${it.id}?inline=1`;
+      im.className = 'thumb'; im.src = u; im.alt = it.name; im.loading = 'lazy'; im.onclick = () => window.open(u, '_blank');
+      w.append(im);
+    }
+    w.append(d); li.append(w, a);
   }
   feed.prepend(li);
 }
@@ -127,8 +135,9 @@ $('#send').onclick = () => {
   $('#msg').value = '';
 };
 
-$('#file').onchange = e => {
-  const f = e.target.files[0]; e.target.value = '';
+$('#file').onchange = e => { [...e.target.files].forEach(upload); e.target.value = ''; };
+
+function upload(f) {
   if (!f) return;
   if (f.size > 25 * 1024 * 1024) return toast('That file is over 25 MB.');
   const x = new XMLHttpRequest(), prog = $('#prog'), bar = $('#bar');
@@ -143,7 +152,14 @@ $('#file').onchange = e => {
   };
   x.onerror = () => { prog.hidden = true; toast('Upload failed. Check your connection.'); };
   x.send(f);
-};
+}
+
+/* Drag and drop a file anywhere on the page */
+let drag = 0;
+addEventListener('dragenter', e => { if (!$('#room').hidden && e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { drag++; $('#drop').hidden = false; } });
+addEventListener('dragleave', () => { if (drag && !--drag) $('#drop').hidden = true; });
+addEventListener('dragover', e => e.preventDefault());
+addEventListener('drop', e => { e.preventDefault(); drag = 0; $('#drop').hidden = true; if (!$('#room').hidden) [...e.dataTransfer.files].forEach(upload); });
 
 /* ---------- Games: Tic-Tac-Toe ---------- */
 function drawGame(g) {
@@ -164,3 +180,21 @@ function drawGame(g) {
     : g.turn === role ? `Your turn. You are ${role}.` : `Waiting for the other player. You are ${role}.`;
 }
 $('#again').onclick = () => ws && ws.readyState === 1 && ws.send('{"type":"reset"}');
+
+/* ---------- Games: switcher and Rock Paper Scissors ---------- */
+$$('.gchip').forEach(c => c.onclick = () => {
+  $$('.gchip').forEach(x => x.classList.toggle('on', x === c));
+  $('#ttt').hidden = c.dataset.game !== 'ttt';
+  $('#rps').hidden = c.dataset.game !== 'rps';
+});
+$$('[data-pick]').forEach(b => b.onclick = () => ws.readyState === 1 && ws.send(JSON.stringify({ type: 'rps', pick: b.dataset.pick })));
+
+function drawRps(r) {
+  const me = role, them = me === 'X' ? 'O' : 'X', L = r.last;
+  $$('[data-pick]').forEach(b => b.disabled = !me || r.picked[me]);
+  $('#rstat').textContent = !me ? 'Two players are already playing. You are watching.'
+    : r.picked[me] ? 'Locked in. Waiting for the other player…' : 'Pick one. The other player cannot see it.';
+  $('#rscore').textContent = me
+    ? (L ? `Last round: you ${L[me]}, they ${L[them]}. ${L.winner === 'draw' ? 'Draw.' : L.winner === me ? 'You won it.' : 'They won it.'} ` : '') + `Score: you ${r.score[me]}, them ${r.score[them]}`
+    : `Score: X ${r.score.X}, O ${r.score.O}`;
+}
