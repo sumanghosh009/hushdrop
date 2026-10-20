@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hushdrop: share between devices with just a PIN</title>
+<meta name="description" content="Share text, files and games between any two devices with a 6-digit PIN. No login. Everything vanishes on its own.">
+<meta name="theme-color" content="#12112b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<header class="top"><a class="brand" href="/"><span class="logo"></span>Hushdrop</a></header>
+
+<main>
+  <section id="home" class="screen">
+    <h1>Drop it. Share it.<br>Watch it vanish.</h1>
+    <p class="lead">Send text and files, or play a quick game, between any two devices with a 6-digit PIN. No login, no apps, nothing left behind.</p>
+    <div class="cards">
+      <div class="card">
+        <h2>Create a PIN</h2>
+        <p>Choose how long it should last.</p>
+        <div class="chips" role="group" aria-label="PIN lifetime">
+          <button class="chip" data-min="15">15 min</button>
+          <button class="chip on" data-min="60">1 hour</button>
+          <button class="chip" data-min="1440">24 hours</button>
+        </div>
+        <button class="btn" id="create">Create PIN</button>
+      </div>
+      <div class="card">
+        <h2>Join with a PIN</h2>
+        <p>Type the 6 digits from the other device.</p>
+        <input id="pin" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="off" aria-label="6-digit PIN">
+        <button class="btn alt" id="join">Join</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="room" class="screen" hidden>
+    <div class="bar">
+      <button class="pinbig" id="pincopy" aria-label="Copy PIN">
+        <span id="digits"></span><small>Tap the PIN to copy it</small>
+      </button>
+      <div class="timer" title="Time left">
+        <svg viewBox="0 0 44 44" aria-hidden="true"><circle class="trk" cx="22" cy="22" r="19"/><circle class="arc" id="arc" cx="22" cy="22" r="19"/></svg>
+        <b id="left">--</b>
+      </div>
+      <button class="ghost" id="leave">Leave</button>
+    </div>
+
+    <nav class="tabs">
+      <button class="tab on" data-tab="share">Share</button>
+      <button class="tab" data-tab="games">Games</button>
+    </nav>
+
+    <div id="share" class="pane">
+      <div class="compose card">
+        <textarea id="msg" placeholder="Type or paste text to send…" maxlength="5000" aria-label="Text to send"></textarea>
+        <div class="row">
+          <button class="btn" id="send">Send text</button>
+          <label class="btn alt up">Send a file (max 25 MB)<input type="file" id="file" hidden></label>
+        </div>
+        <div class="prog" id="prog" hidden><i id="bar"></i></div>
+      </div>
+      <ul id="feed" class="feed"></ul>
+    </div>
+
+    <div id="games" class="pane" hidden>
+      <h2>Tic-Tac-Toe</h2>
+      <p id="gstat" class="gstat"></p>
+      <div id="board" class="board"></div>
+      <button class="btn alt" id="again">New game</button>
+    </div>
+  </section>
+</main>
+
+<footer>© 2026 Suman Ghosh. All rights reserved.</footer>
+<div id="toast" role="status"></div>
+<script src="app.js"></script>
+</body>
+</html>
